@@ -9,6 +9,8 @@ export class Dispatcher {
     private controllerResolver?: ControllerResolver;
     private invoker: MethodInvoker;
     private responseResolver: ResponseResolver;
+    private middlewareGroups: Record<string, any[]> = {};
+    private routeMiddleware: Record<string, any> = {};
 
     constructor(private container?: any) {
         this.invoker = new MethodInvoker();
@@ -24,6 +26,22 @@ export class Dispatcher {
     public setContainer(container: any): this {
         this.container = container;
         this.controllerResolver = new ControllerResolver(container);
+        return this;
+    }
+
+    /**
+     * Set the middleware groups mapping.
+     */
+    public setMiddlewareGroups(groups: Record<string, any[]>): this {
+        this.middlewareGroups = groups;
+        return this;
+    }
+
+    /**
+     * Set the route middleware mapping.
+     */
+    public setRouteMiddleware(middleware: Record<string, any>): this {
+        this.routeMiddleware = middleware;
         return this;
     }
 
@@ -54,6 +72,8 @@ export class Dispatcher {
 
         // 2. Prepare Middleware Pipeline
         const pipeline = new MiddlewarePipeline(this.container);
+        pipeline.setMiddlewareGroups(this.middlewareGroups);
+        pipeline.setRouteMiddleware(this.routeMiddleware);
 
         // Add route-level middleware
         if (route.middleware && route.middleware.length > 0) {
