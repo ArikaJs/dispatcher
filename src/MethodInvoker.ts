@@ -1,4 +1,4 @@
-import { Request } from '@arikajs/http';
+import { Request } from './Contracts/Http';
 
 export class MethodInvoker {
     /**

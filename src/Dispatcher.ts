@@ -1,6 +1,5 @@
-import { Container } from '@arikajs/foundation';
-import { Request, Response } from '@arikajs/http';
-import { MatchedRoute } from '@arikajs/router';
+import { Request, Response } from './Contracts/Http';
+import { MatchedRoute } from './Contracts/Router';
 import { ControllerResolver } from './ControllerResolver';
 import { MethodInvoker } from './MethodInvoker';
 import { ResponseResolver } from './ResponseResolver';
@@ -11,7 +10,7 @@ export class Dispatcher {
     private invoker: MethodInvoker;
     private responseResolver: ResponseResolver;
 
-    constructor(private container?: Container) {
+    constructor(private container?: any) {
         this.invoker = new MethodInvoker();
         this.responseResolver = new ResponseResolver();
         if (container) {
@@ -22,7 +21,7 @@ export class Dispatcher {
     /**
      * Set the container for resolving controllers.
      */
-    public setContainer(container: Container): this {
+    public setContainer(container: any): this {
         this.container = container;
         this.controllerResolver = new ControllerResolver(container);
         return this;

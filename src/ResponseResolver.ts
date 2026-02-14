@@ -1,12 +1,12 @@
-import { Response } from '@arikajs/http';
+import { Response } from './Contracts/Http';
 
 export class ResponseResolver {
     /**
      * Resolve and normalize the handler return value into a Response object.
      */
     public resolve(value: any, response: Response): Response {
-        // If it's already a Response object, return as-is
-        if (value instanceof Response) {
+        // If it's already a Response object (basic duck typing check for framework response)
+        if (value && typeof value.send === 'function' && typeof value.status === 'function') {
             return value;
         }
 

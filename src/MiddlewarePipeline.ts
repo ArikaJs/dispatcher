@@ -1,5 +1,4 @@
-import { Request, Response } from '@arikajs/http';
-import { Container } from '@arikajs/foundation';
+import { Request, Response } from './Contracts/Http';
 
 export type MiddlewareHandler =
     | ((request: Request, next: (req: Request) => Promise<Response>) => Promise<Response>)
@@ -10,7 +9,7 @@ export type MiddlewareHandler =
 export class MiddlewarePipeline {
     private middleware: any[] = [];
 
-    constructor(private container?: Container) { }
+    constructor(private container?: any) { }
 
     /**
      * Add middleware to the pipeline.

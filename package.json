@@ -34,11 +34,7 @@
         "url": "https://github.com/arikajs/dispatcher/issues"
     },
     "homepage": "https://github.com/arikajs/dispatcher#readme",
-    "dependencies": {
-        "@arikajs/foundation": "file:../foundation",
-        "@arikajs/http": "file:../http",
-        "@arikajs/router": "file:../router"
-    },
+    "dependencies": {},
     "devDependencies": {
         "@types/node": "^20.11.24",
         "typescript": "^5.3.3"

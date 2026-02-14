@@ -1,7 +1,5 @@
-import { Container } from '@arikajs/foundation';
-
 export class ControllerResolver {
-    constructor(private container: Container) { }
+    constructor(private container: any) { }
 
     /**
      * Resolve the controller instance and method name.
