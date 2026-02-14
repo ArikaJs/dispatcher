@@ -49,8 +49,12 @@ export class Dispatcher {
     /**
      * Register a route parameter binder.
      */
-    public bind(key: string, resolver: (value: any) => Promise<any>): this {
-        this.parameterBinders.set(key, resolver);
+    public bind(key: string, resolver: ((value: any) => Promise<any>) | { findOrFail: (id: any) => Promise<any> }): this {
+        if (typeof resolver !== 'function' && typeof (resolver as any).findOrFail === 'function') {
+            this.parameterBinders.set(key, (value) => (resolver as any).findOrFail(value));
+        } else {
+            this.parameterBinders.set(key, resolver as (value: any) => Promise<any>);
+        }
         return this;
     }
 
