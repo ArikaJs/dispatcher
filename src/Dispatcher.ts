@@ -3,7 +3,7 @@ import { MatchedRoute } from './Contracts/Router';
 import { ControllerResolver } from './ControllerResolver';
 import { MethodInvoker } from './MethodInvoker';
 import { ResponseResolver } from './ResponseResolver';
-import { Pipeline } from '@arikajs/middleware';
+import { MiddlewarePipeline } from './MiddlewarePipeline';
 
 export class Dispatcher {
     private controllerResolver?: ControllerResolver;
@@ -53,11 +53,11 @@ export class Dispatcher {
         }
 
         // 2. Prepare Middleware Pipeline
-        const pipeline = new Pipeline<Request, Response>(this.container);
+        const pipeline = new MiddlewarePipeline(this.container);
 
         // Add route-level middleware
         if (route.middleware && route.middleware.length > 0) {
-            pipeline.pipe(route.middleware);
+            pipeline.use(route.middleware);
         }
 
         // 3. Execute Pipeline
