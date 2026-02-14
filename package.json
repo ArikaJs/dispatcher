@@ -9,8 +9,8 @@
         "build": "tsc -p tsconfig.json",
         "clean": "rm -rf dist",
         "prepare": "npm run build",
-        "test": "npm run build && node --test 'dist/tests/**/*.test.js'",
-        "test:watch": "npm run build && node --test --watch 'dist/tests/**/*.test.js'"
+        "test": "npx tsx tests/Dispatcher.test.ts",
+        "test:watch": "npx tsx --watch tests/Dispatcher.test.ts"
     },
     "files": [
         "dist"
@@ -34,7 +34,9 @@
         "url": "https://github.com/arikajs/dispatcher/issues"
     },
     "homepage": "https://github.com/arikajs/dispatcher#readme",
-    "dependencies": {},
+    "dependencies": {
+        "@arikajs/middleware": "file:../middleware"
+    },
     "devDependencies": {
         "@types/node": "^20.11.24",
         "typescript": "^5.3.3"
