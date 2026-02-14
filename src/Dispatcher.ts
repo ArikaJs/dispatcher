@@ -3,7 +3,7 @@ import { MatchedRoute } from './Contracts/Router';
 import { ControllerResolver } from './ControllerResolver';
 import { MethodInvoker } from './MethodInvoker';
 import { ResponseResolver } from './ResponseResolver';
-import { MiddlewarePipeline } from './MiddlewarePipeline';
+import { Pipeline } from '@arikajs/middleware';
 
 export class Dispatcher {
     private controllerResolver?: ControllerResolver;
@@ -11,6 +11,7 @@ export class Dispatcher {
     private responseResolver: ResponseResolver;
     private middlewareGroups: Record<string, any[]> = {};
     private routeMiddleware: Record<string, any> = {};
+    private parameterBinders: Map<string, (value: any) => Promise<any>> = new Map();
 
     constructor(private container?: any) {
         this.invoker = new MethodInvoker();
@@ -46,6 +47,14 @@ export class Dispatcher {
     }
 
     /**
+     * Register a route parameter binder.
+     */
+    public bind(key: string, resolver: (value: any) => Promise<any>): this {
+        this.parameterBinders.set(key, resolver);
+        return this;
+    }
+
+    /**
      * Dispatch the matched route to its handler.
      */
     public async dispatch(
@@ -55,6 +64,9 @@ export class Dispatcher {
     ): Promise<Response> {
         const { route, params } = matchedRoute;
         const handler = route.handler;
+
+        // 0. Resolve Route Parameters (Model Binding)
+        const resolvedParams = await this.resolveParameters(params);
 
         // 1. Resolve Handler
         let resolvedHandler: Function | { controller: any; method: string };
@@ -71,22 +83,38 @@ export class Dispatcher {
         }
 
         // 2. Prepare Middleware Pipeline
-        const pipeline = new MiddlewarePipeline(this.container);
+        const pipeline = new Pipeline<Request, Response>(this.container);
         pipeline.setMiddlewareGroups(this.middlewareGroups);
-        pipeline.setRouteMiddleware(this.routeMiddleware);
+        pipeline.setAliases(this.routeMiddleware);
 
         // Add route-level middleware
         if (route.middleware && route.middleware.length > 0) {
-            pipeline.use(route.middleware);
+            pipeline.pipe(route.middleware);
         }
 
         // 3. Execute Pipeline
         return await pipeline.handle(request, async (req: Request) => {
             // 4. Invoke Handler
-            const result = await this.invoker.invoke(resolvedHandler, req, params);
+            const result = await this.invoker.invoke(resolvedHandler, req, resolvedParams);
 
             // 5. Normalize Response
             return this.responseResolver.resolve(result, response);
         });
+    }
+
+    /**
+     * Resolve route parameters using registered binders.
+     */
+    private async resolveParameters(params: Record<string, any>): Promise<Record<string, any>> {
+        const resolved = { ...params };
+
+        for (const [key, value] of Object.entries(params)) {
+            if (this.parameterBinders.has(key)) {
+                const resolver = this.parameterBinders.get(key)!;
+                resolved[key] = await resolver(value);
+            }
+        }
+
+        return resolved;
     }
 }
