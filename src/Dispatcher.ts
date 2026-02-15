@@ -49,11 +49,11 @@ export class Dispatcher {
     /**
      * Register a route parameter binder.
      */
-    public bind(key: string, resolver: ((value: any) => Promise<any>) | { findOrFail: (id: any) => Promise<any> }): this {
-        if (typeof resolver !== 'function' && typeof (resolver as any).findOrFail === 'function') {
-            this.parameterBinders.set(key, (value) => (resolver as any).findOrFail(value));
+    public bind(key: string, resolver: any): this {
+        if (resolver && typeof resolver.findOrFail === 'function') {
+            this.parameterBinders.set(key, (value) => resolver.findOrFail(value));
         } else {
-            this.parameterBinders.set(key, resolver as (value: any) => Promise<any>);
+            this.parameterBinders.set(key, resolver);
         }
         return this;
     }
@@ -103,7 +103,7 @@ export class Dispatcher {
 
             // 5. Normalize Response
             return this.responseResolver.resolve(result, response);
-        });
+        }, response);
     }
 
     /**
