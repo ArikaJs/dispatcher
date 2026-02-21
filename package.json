@@ -35,7 +35,7 @@
     },
     "homepage": "https://github.com/arikajs/dispatcher#readme",
     "dependencies": {
-        "@arikajs/middleware": "^0.0.4"
+        "@arikajs/middleware": "file:../middleware"
     },
     "devDependencies": {
         "@types/node": "^20.11.24",

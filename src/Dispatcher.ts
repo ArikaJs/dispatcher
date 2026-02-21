@@ -12,9 +12,10 @@ export class Dispatcher {
     private middlewareGroups: Record<string, any[]> = {};
     private routeMiddleware: Record<string, any> = {};
     private parameterBinders: Map<string, (value: any) => Promise<any>> = new Map();
+    private exceptionHandler?: (error: any, request: Request, response: Response) => any;
 
     constructor(private container?: any) {
-        this.invoker = new MethodInvoker();
+        this.invoker = new MethodInvoker(container);
         this.responseResolver = new ResponseResolver();
         if (container) {
             this.controllerResolver = new ControllerResolver(container);
@@ -27,6 +28,15 @@ export class Dispatcher {
     public setContainer(container: any): this {
         this.container = container;
         this.controllerResolver = new ControllerResolver(container);
+        this.invoker.setContainer(container);
+        return this;
+    }
+
+    /**
+     * Set a global exception handler to catch and format errors from route execution.
+     */
+    public setExceptionHandler(handler: (error: any, request: Request, response: Response) => any): this {
+        this.exceptionHandler = handler;
         return this;
     }
 
@@ -74,12 +84,21 @@ export class Dispatcher {
 
         // 1. Resolve Handler
         let resolvedHandler: Function | { controller: any; method: string };
+        let controllerMiddleware: any[] = [];
 
         if (Array.isArray(handler)) {
             if (!this.controllerResolver) {
                 throw new Error('Container required for controller resolution.');
             }
-            resolvedHandler = this.controllerResolver.resolve(handler);
+            const resolved = this.controllerResolver.resolve(handler);
+            resolvedHandler = resolved;
+
+            // Extract controller-level middleware
+            if (typeof resolved.controller.getMiddleware === 'function') {
+                controllerMiddleware = resolved.controller.getMiddleware() || [];
+            } else if (resolved.controller.constructor && resolved.controller.constructor.middleware) {
+                controllerMiddleware = resolved.controller.constructor.middleware;
+            }
         } else if (typeof handler === 'function') {
             resolvedHandler = handler;
         } else {
@@ -96,14 +115,27 @@ export class Dispatcher {
             pipeline.pipe(route.middleware);
         }
 
-        // 3. Execute Pipeline
-        return await pipeline.handle(request, async (req: Request) => {
-            // 4. Invoke Handler
-            const result = await this.invoker.invoke(resolvedHandler, req, resolvedParams);
+        // Add controller-level middleware
+        if (controllerMiddleware && controllerMiddleware.length > 0) {
+            pipeline.pipe(controllerMiddleware);
+        }
 
-            // 5. Normalize Response
-            return this.responseResolver.resolve(result, response);
-        }, response);
+        // 3. Execute Pipeline
+        try {
+            return await pipeline.handle(request, async (req: Request) => {
+                // 4. Invoke Handler
+                const result = await this.invoker.invoke(resolvedHandler, req, resolvedParams);
+
+                // 5. Normalize Response
+                return await this.responseResolver.resolve(result, response);
+            }, response);
+        } catch (error) {
+            if (this.exceptionHandler) {
+                const handledResult = await this.exceptionHandler(error, request, response);
+                return await this.responseResolver.resolve(handledResult, response);
+            }
+            throw error;
+        }
     }
 
     /**

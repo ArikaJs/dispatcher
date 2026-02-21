@@ -46,21 +46,28 @@ The goal of this package is to be the **reliable executor** of application logic
   - Automatic instantiation of controllers via Service Container
 
 - **Method Invocation**
-  - Resolves method dependencies
+  - Resolves method dependencies (auto-DI if Container supports `.call()`)
   - Injects `Request` object automatically
   - Maps route parameters (e.g., `{id}`) to method arguments
 
 - **Middleware Pipeline**
   - Executes route-specific middleware
+  - **Executes Controller-specific middleware** (`static middleware = [...]` or `getMiddleware()`)
   - Onion-style execution flow (nested `next()` calls)
   - Asynchronous middleware support
   - Container-based middleware resolution
+
+- **Exception Handling**
+  - Configurable global execution wrapper `setExceptionHandler((err, req, res) => ...)`
+  - Converts errors gracefully into responses
 
 - **Response Normalization**
   - Automatically converts return values to HTTP responses
   - Objects/Arrays → JSON response
   - Strings → Plain text response
   - `null`/`undefined` → 204 No Content
+  - View Objects (implementing `.render()`) → Rendered HTML
+  - NodeJS Streams (`Readable`) → Piped directly to Response
 
 ---
 
@@ -135,7 +142,35 @@ const dispatcher = new Dispatcher(app.container);
 const response = await dispatcher.dispatch(matched, request, response);
 ```
 
+### Global Exception Handler
+
+You can intercept exceptions at the edge of execution and transform them into standard JSON responses, preventing hard crashes:
+
+```ts
+dispatcher.setExceptionHandler((error, request, response) => {
+    if (error.name === 'AuthorizationException') {
+        return response.status(403).json({ error: error.message });
+    }
+    
+    // Unhandled error fallback
+    return response.status(500).json({ error: 'Server Error' });
+});
+```
+
 ---
+
+## Controller Middleware
+
+Middleware don't just have to live on the route. The Dispatcher automatically scans your class-based controllers for middleware and merges them into the pipeline.
+
+```ts
+class PostController {
+    // Static middleware applied to all routes mapping to this controller
+    static middleware = ['auth', 'verified'];
+
+    index() { /* ... */ }
+}
+```
 
 ## Middleware Pipeline
 
@@ -172,6 +207,8 @@ Conversion Rules:
 - **Strings/Buffers**: Sent as the body via `response.send()`
 - **null/undefined**: Sets status 204 (No Content)
 - **Response**: Returned as-is
+- **Views**: Anything with an async `render()` function calls the function and sends the result
+- **Streams**: Returned values extending `stream.Stream` pipe properly if the response driver supports `.stream()`
 
 ---
 
