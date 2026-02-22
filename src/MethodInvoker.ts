@@ -1,4 +1,4 @@
-import { Request } from './Contracts/Http';
+import { Request, Response } from './Contracts/Http';
 
 export class MethodInvoker {
     constructor(private container?: any) { }
@@ -14,24 +14,25 @@ export class MethodInvoker {
     public async invoke(
         handler: Function | { controller: any; method: string },
         request: Request,
+        response: Response,
         params: Record<string, any>
     ): Promise<any> {
         if (typeof handler === 'function') {
             // If container has a call method (e.g., Arika Foundation container), delegate to it
             // This enables advanced method DI using reflect-metadata
             if (this.container && typeof this.container.call === 'function') {
-                return await this.container.call(handler, { request, ...params });
+                return await this.container.call(handler, { request, response, ...params });
             }
-            return await handler(request, ...Object.values(params));
+            return await handler(request, response, ...Object.values(params));
         }
 
         const { controller, method } = handler;
 
         // Container-based advanced method DI
         if (this.container && typeof this.container.call === 'function') {
-            return await this.container.call([controller, method], { request, ...params });
+            return await this.container.call([controller, method], { request, response, ...params });
         }
 
-        return await controller[method](request, ...Object.values(params));
+        return await controller[method](request, response, ...Object.values(params));
     }
 }

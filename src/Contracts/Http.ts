@@ -5,7 +5,7 @@ export interface Request {
 
 export interface Response {
     status(code: number): this;
-    send(data: any): this;
-    json(data: any): this;
+    send(data: any, status?: number): this;
+    json(data: any, status?: number): this;
     [key: string]: any;
 }

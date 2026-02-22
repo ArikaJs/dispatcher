@@ -79,6 +79,11 @@ export class Dispatcher {
         const { route, params } = matchedRoute;
         const handler = route.handler;
 
+        // Set parameters on the request object
+        if (typeof request.setParams === 'function') {
+            request.setParams(params);
+        }
+
         // 0. Resolve Route Parameters (Model Binding)
         const resolvedParams = await this.resolveParameters(params);
 
@@ -124,7 +129,7 @@ export class Dispatcher {
         try {
             return await pipeline.handle(request, async (req: Request) => {
                 // 4. Invoke Handler
-                const result = await this.invoker.invoke(resolvedHandler, req, resolvedParams);
+                const result = await this.invoker.invoke(resolvedHandler, req, response, resolvedParams);
 
                 // 5. Normalize Response
                 return await this.responseResolver.resolve(result, response);
