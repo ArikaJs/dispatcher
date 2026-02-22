@@ -17,7 +17,7 @@ const dispatcher = new Dispatcher(container);
 const response = await dispatcher.dispatch(matchedRoute, request, responseInstance);
 ```
 
-Arika Dispatcher is to ArikaJS what `illuminate/routing`’s dispatcher is to Laravel: it takes a route and makes things happen.
+Arika Dispatcher is to ArikaJS the core execution engine for ArikaJS: it takes a route and makes things happen.
 
 ---
 
@@ -259,3 +259,24 @@ Before submitting a PR:
 ## Philosophy
 
 > “Routing decides the path. Dispatcher executes the journey.”
+
+## 🏗 Architecture
+
+```text
+dispatcher/
+├── src/
+│   ├── Contracts
+│   │   ├── Container.ts
+│   │   ├── Http.ts
+│   │   └── Router.ts
+│   ├── ControllerResolver.ts
+│   ├── Dispatcher.ts
+│   ├── index.ts
+│   ├── MethodInvoker.ts
+│   └── ResponseResolver.ts
+├── tests/
+├── package.json
+├── tsconfig.json
+└── README.md
+```
+
