@@ -212,17 +212,25 @@ Conversion Rules:
 
 ---
 
-## Project Structure (recommended)
+## 🏗 Architecture
 
-Inside the `arika-dispatcher` repository:
-
-- `src/`
-  - `Dispatcher.ts` – Main coordinator
-  - `ControllerResolver.ts` – DI-aware handler resolution
-  - `MethodInvoker.ts` – Dynamic method execution
-  - `ResponseResolver.ts` – Logic for normalizing return values
-  - `MiddlewarePipeline.ts` – The execution stack for middleware
-  - `index.ts` – Public exports
+```text
+dispatcher/
+├── src/
+│   ├── Contracts
+│   │   ├── Container.ts
+│   │   ├── Http.ts
+│   │   └── Router.ts
+│   ├── ControllerResolver.ts
+│   ├── Dispatcher.ts
+│   ├── index.ts
+│   ├── MethodInvoker.ts
+│   └── ResponseResolver.ts
+├── tests/
+├── package.json
+├── tsconfig.json
+└── README.md
+```
 
 ---
 
@@ -259,24 +267,3 @@ Before submitting a PR:
 ## Philosophy
 
 > “Routing decides the path. Dispatcher executes the journey.”
-
-## 🏗 Architecture
-
-```text
-dispatcher/
-├── src/
-│   ├── Contracts
-│   │   ├── Container.ts
-│   │   ├── Http.ts
-│   │   └── Router.ts
-│   ├── ControllerResolver.ts
-│   ├── Dispatcher.ts
-│   ├── index.ts
-│   ├── MethodInvoker.ts
-│   └── ResponseResolver.ts
-├── tests/
-├── package.json
-├── tsconfig.json
-└── README.md
-```
-
